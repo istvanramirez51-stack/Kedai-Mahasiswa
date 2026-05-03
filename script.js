@@ -4,6 +4,17 @@
    ======================================== */
 
 // ========================================
+// USERS WITH ROLES
+// ========================================
+const USERS = [
+    { username: 'admin', password: 'admin123', role: 'admin', name: 'Administrator' },
+    { username: 'seller1', password: 'seller123', role: 'seller', sellerId: 'seller1', name: 'Batagor Wiliam' },
+    { username: 'seller2', password: 'seller123', role: 'seller', sellerId: 'seller2', name: 'Bakso Cup Ambyar' },
+    { username: 'seller3', password: 'seller123', role: 'seller', sellerId: 'seller3', name: 'Kedai Kopi Kak Srik' },
+    { username: 'seller4', password: 'seller123', role: 'seller', sellerId: 'seller4', name: 'Ayam Geprek wak Ijol' },
+];
+
+// ========================================
 // DATA STORE
 // ========================================
 const AppData = {
@@ -253,10 +264,11 @@ const handleLogin = () => {
     const username = document.getElementById('login-username').value.trim();
     const password = document.getElementById('login-password').value.trim();
     
-    if (username === 'admin' && password === 'admin123') {
+    const user = USERS.find(u => u.username === username && u.password === password);
+    if (user) {
         AppData.isLoggedIn = true;
-        AppData.currentUser = { username: 'admin', name: 'Admin Toko' };
-        showToast('Berhasil login! Selamat datang kembali.');
+        AppData.currentUser = { ...user };
+        showToast(`Selamat datang, ${user.name}!`);
         toggleLoginModal(false);
         updateNavForLogin();
     } else {
@@ -264,11 +276,48 @@ const handleLogin = () => {
     }
 };
 
+const logout = () => {
+    AppData.isLoggedIn = false;
+    AppData.currentUser = null;
+    AppData.currentSellerDashboard = null;
+    const loginBtn = document.getElementById('login-nav-btn');
+    loginBtn.innerHTML = '<i class="fas fa-user-circle"></i> <span>Login</span>';
+    loginBtn.style.background = '';
+    loginBtn.onclick = null;
+    loginBtn.addEventListener('click', () => toggleLoginModal(true));
+    // Remove logout btn if exists
+    const logoutBtn = document.getElementById('nav-logout-btn');
+    if (logoutBtn) logoutBtn.remove();
+    showToast('Berhasil logout!');
+};
+
 const updateNavForLogin = () => {
     const loginBtn = document.getElementById('login-nav-btn');
-    if (AppData.isLoggedIn) {
-        loginBtn.innerHTML = '<i class="fas fa-user-check"></i> <span>Admin</span>';
-        loginBtn.style.background = 'var(--emerald)';
+    const user = AppData.currentUser;
+    if (!user) return;
+
+    const isAdmin = user.role === 'admin';
+    const roleLabel = isAdmin ? 'Admin' : 'Penjual';
+    const roleColor = isAdmin ? 'var(--rose)' : 'var(--teal)';
+
+    loginBtn.innerHTML = `<i class="fas fa-store"></i> <span>${roleLabel}: ${user.name.split(' ')[0]}</span>`;
+    loginBtn.style.background = roleColor;
+    // Remove old click handler and open dashboard directly
+    loginBtn.replaceWith(loginBtn.cloneNode(true));
+    const newBtn = document.getElementById('login-nav-btn');
+    newBtn.style.background = roleColor;
+    newBtn.innerHTML = `<i class="fas fa-store"></i> <span>${roleLabel}: ${user.name.split(' ')[0]}</span>`;
+    newBtn.addEventListener('click', () => toggleSellerModal(true));
+
+    // Add logout button next to login btn
+    if (!document.getElementById('nav-logout-btn')) {
+        const logoutBtn = document.createElement('button');
+        logoutBtn.id = 'nav-logout-btn';
+        logoutBtn.className = 'nav-logout-btn';
+        logoutBtn.innerHTML = '<i class="fas fa-right-from-bracket"></i>';
+        logoutBtn.title = 'Logout';
+        logoutBtn.addEventListener('click', logout);
+        newBtn.insertAdjacentElement('afterend', logoutBtn);
     }
 };
 
@@ -494,25 +543,59 @@ const toggleCart = (show) => {
 const renderToko = () => {
     const grid = document.getElementById('toko-grid');
     
-    grid.innerHTML = AppData.sellers.map(seller => `
-        <div class="toko-card" onclick="openMenu('${seller.id}')" data-aos="fade-up">
-            <div class="toko-img-wrap">
+    grid.innerHTML = AppData.sellers.map((seller, idx) => {
+        const accentColors = ['var(--gold)', 'var(--teal)', 'var(--violet)', 'var(--rose)'];
+        const bgColors = ['var(--gold-glow)', 'var(--teal-glow)', 'var(--violet-glow)', 'var(--rose-glow)'];
+        const accent = accentColors[idx % accentColors.length];
+        const bg = bgColors[idx % bgColors.length];
+        const isClosed = seller.status === 'closed';
+        return `
+        <div class="toko-card ${isClosed ? 'toko-card-closed' : ''}" onclick="${!isClosed ? `openMenu('${seller.id}')` : ''}" style="--card-accent:${accent};--card-bg:${bg}">
+            <div class="toko-card-img-wrap">
                 ${seller.image ? 
-                    `<img src="${seller.image}" alt="${seller.name}" class="toko-img" onerror="this.parentElement.innerHTML='<div class=\\'toko-img-placeholder\\'><i class=\\'fas fa-store\\'></i></div>'">` :
-                    `<div class="toko-img-placeholder"><i class="fas fa-store"></i></div>`
+                    `<img src="${seller.image}" alt="${seller.name}" class="toko-img" onerror="this.parentElement.innerHTML='<div class=\\'toko-img-bg\\'><i class=\\'fas fa-store\\'></i></div>'">` :
+                    `<div class="toko-img-bg"><i class="fas fa-store"></i></div>`
                 }
-                <span class="toko-status ${seller.status}">${seller.status === 'open' ? 'BUKA' : 'TUTUP'}</span>
+                <div class="toko-img-overlay"></div>
+                <span class="toko-status-badge ${seller.status}">
+                    <span class="status-dot"></span>${seller.status === 'open' ? 'BUKA' : 'TUTUP'}
+                </span>
             </div>
-            <div class="toko-info">
-                <h3>${seller.name}</h3>
-                <p>${seller.description}</p>
-                <div class="toko-meta">
-                    <span class="toko-menu-count"><i class="fas fa-utensils"></i> ${seller.products.length} Menu</span>
-                    <span class="toko-cta">Lihat Menu <i class="fas fa-arrow-right"></i></span>
+            <div class="toko-card-body">
+                <div class="toko-card-title-row">
+                    <div class="toko-icon-wrap" style="background:${bg};border-color:${accent}">
+                        <i class="fas fa-store" style="color:${accent}"></i>
+                    </div>
+                    <div class="toko-title-info">
+                        <h3 class="toko-name">${seller.name}</h3>
+                        <div class="toko-rating">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-stroke"></i>
+                            <span>4.8</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="toko-desc">${seller.description}</p>
+                <div class="toko-chips">
+                    <span class="toko-chip" style="color:${accent};border-color:${accent}">
+                        <i class="fas fa-utensils"></i> ${seller.products.length} Menu
+                    </span>
+                    <span class="toko-chip">
+                        <i class="fab fa-whatsapp"></i> WA Order
+                    </span>
+                    <span class="toko-chip">
+                        <i class="fas fa-clock"></i> ~15 mnt
+                    </span>
+                </div>
+                <div class="toko-card-footer">
+                    <div class="toko-wa-label"><i class="fab fa-whatsapp"></i> Pesan via WA</div>
+                    <button class="toko-order-btn" style="background:${accent};color:#000" ${isClosed ? 'disabled' : ''}>
+                        ${isClosed ? '<i class="fas fa-lock"></i> Tutup' : '<i class="fas fa-arrow-right"></i>'}
+                    </button>
                 </div>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 };
 
 // ========================================
@@ -711,60 +794,57 @@ const confirmOrder = () => {
         return;
     }
     
-    // Group by seller and send WA
+    // Group by seller
     const grouped = {};
     AppData.cart.forEach(item => {
         if (!grouped[item.sellerId]) grouped[item.sellerId] = [];
         grouped[item.sellerId].push(item);
     });
     
-    let transactionSaved = false;
+    const storeIds = Object.keys(grouped);
+    const waLinks = [];
     
     for (const [sellerId, items] of Object.entries(grouped)) {
         const seller = getSellerById(sellerId);
-        let message = `*PESANAN BARU - FOOD HUB*\\n\\n`;
-        message += `*Dari:* ${customerName}\\n`;
-        message += `*Telepon:* ${customerPhone}\\n`;
-        message += `*Toko:* ${seller.name}\\n\\n`;
-        message += `*Detail Pesanan:*\\n`;
+        let message = `*PESANAN BARU - FOOD HUB*\n\n`;
+        message += `*Dari:* ${customerName}\n`;
+        message += `*Telepon:* ${customerPhone}\n`;
+        message += `*Toko:* ${seller.name}\n\n`;
+        message += `*Detail Pesanan:*\n`;
         
         let sellerTotal = 0;
         items.forEach(item => {
             const product = getProductById(item.productId);
             const subtotal = product.price * item.quantity;
             sellerTotal += subtotal;
-            message += `- ${product.name} x${item.quantity} = ${formatRupiah(subtotal)}\\n`;
+            message += `- ${product.name} x${item.quantity} = ${formatRupiah(subtotal)}\n`;
         });
         
-        message += `\\n*Total:* ${formatRupiah(sellerTotal)}\\n`;
-        message += `*Metode Pengambilan:* ${pickupMethod === 'delivery' ? 'Diantar' : 'Ambil Sendiri'}\\n`;
-        message += `*Metode Pembayaran:* ${paymentMethod.toUpperCase()}\\n`;
+        message += `\n*Total:* ${formatRupiah(sellerTotal)}\n`;
+        message += `*Metode Pengambilan:* ${pickupMethod === 'delivery' ? 'Diantar' : 'Ambil Sendiri'}\n`;
+        message += `*Metode Pembayaran:* ${paymentMethod.toUpperCase()}\n`;
         
         if (pickupMethod === 'delivery') {
-            message += `*Alamat:* ${address}\\n`;
-        } else {
-            message += `*Nomor Resi:* ${resi}\\n`;
+            message += `*Alamat:* ${address}\n`;
         }
+        message += `*Nomor Resi:* ${resi}\n`;
+        message += `\nTerima kasih telah memesan di Food Hub! 🙏`;
         
-        message += `\\nTerima kasih telah memesan di Food Hub!`;
-        
-        // Save transaction
-        if (!transactionSaved) {
-            AppData.transactions.push({
-                resi: resi,
-                customer: customerName,
-                total: sellerTotal,
-                date: new Date().toISOString(),
-                method: pickupMethod,
-                payment: paymentMethod
-            });
-            transactionSaved = true;
-        }
-        
-        // Open WhatsApp
-        const waUrl = `https://wa.me/${seller.whatsapp}?text=${encodeURIComponent(message)}`;
-        window.open(waUrl, '_blank');
+        waLinks.push({
+            sellerName: seller.name,
+            url: `https://wa.me/${seller.whatsapp}?text=${encodeURIComponent(message)}`
+        });
     }
+    
+    // Save transaction
+    AppData.transactions.push({
+        resi: resi,
+        customer: customerName,
+        date: new Date().toISOString(),
+        method: pickupMethod,
+        payment: paymentMethod,
+        stores: storeIds.length
+    });
     
     // Clear cart
     AppData.cart = [];
@@ -772,7 +852,55 @@ const confirmOrder = () => {
     renderCart();
     toggleCheckout(false);
     toggleCart(false);
-    showToast('Pesanan berhasil dikirim! Cek WhatsApp Anda.');
+
+    // Show WA order modal
+    showWaOrderModal(waLinks);
+};
+
+// Show modal with per-store WA buttons
+const showWaOrderModal = (waLinks) => {
+    let existing = document.getElementById('wa-order-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'wa-order-modal';
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content wa-order-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-circle-check" style="color:var(--emerald)"></i> Pesanan Dikonfirmasi!</h3>
+                <button onclick="document.getElementById('wa-order-modal').remove()" class="close-modal"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="wa-order-desc">
+                    ${waLinks.length > 1 
+                        ? `Pesananmu mencakup <strong>${waLinks.length} toko berbeda</strong>. Klik tombol di bawah untuk mengirim pesanan ke masing-masing toko via WhatsApp.`
+                        : 'Klik tombol di bawah untuk mengirim pesanan ke toko via WhatsApp.'
+                    }
+                </p>
+                <div class="wa-store-buttons">
+                    ${waLinks.map((link, i) => `
+                        <a href="${link.url}" target="_blank" class="wa-store-btn" onclick="this.classList.add('sent')">
+                            <div class="wa-store-btn-left">
+                                <span class="wa-store-num">${i + 1}</span>
+                                <div>
+                                    <strong>${link.sellerName}</strong>
+                                    <span>Tap untuk kirim pesanan</span>
+                                </div>
+                            </div>
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                    `).join('')}
+                </div>
+                <p class="wa-order-note"><i class="fas fa-circle-info"></i> Setiap toko menerima pesanannya masing-masing secara terpisah.</p>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    gsap.fromTo(modal.querySelector('.modal-content'),
+        { scale: 0.9, y: 30, opacity: 0 },
+        { scale: 1, y: 0, opacity: 1, duration: 0.4, ease: 'back.out(1.7)' }
+    );
 };
 
 // ========================================
@@ -787,6 +915,15 @@ const toggleSellerModal = (show) => {
             { scale: 0.9, y: 30, opacity: 0 }, 
             { scale: 1, y: 0, opacity: 1, duration: 0.3, ease: 'back.out(1.7)' }
         );
+        // If already logged in, go straight to dashboard
+        if (AppData.isLoggedIn && AppData.currentUser) {
+            document.getElementById('seller-login-form').classList.add('hidden');
+            document.getElementById('seller-dashboard').classList.remove('hidden');
+            openSellerDashboard();
+        } else {
+            document.getElementById('seller-login-form').classList.remove('hidden');
+            document.getElementById('seller-dashboard').classList.add('hidden');
+        }
     } else {
         gsap.to(modal.querySelector('.modal-content'), {
             scale: 0.9,
@@ -802,21 +939,68 @@ const sellerLogin = () => {
     const username = document.getElementById('seller-username').value.trim();
     const password = document.getElementById('seller-password').value.trim();
     
-    if (username === 'admin' && password === 'admin123') {
-        // Demo: login sebagai seller pertama
-        AppData.currentSellerDashboard = AppData.sellers[0];
-        document.getElementById('seller-login-form').classList.add('hidden');
-        document.getElementById('seller-dashboard').classList.remove('hidden');
-        renderSellerDashboard();
-        showToast('Berhasil masuk dashboard!');
+    const user = USERS.find(u => u.username === username && u.password === password);
+    if (user) {
+        AppData.isLoggedIn = true;
+        AppData.currentUser = { ...user };
+        updateNavForLogin();
+        openSellerDashboard();
+        showToast(`Selamat datang, ${user.name}!`);
     } else {
         showToast('Username atau password salah!', 'error');
     }
 };
 
+const openSellerDashboard = () => {
+    const user = AppData.currentUser;
+    if (!user) return;
+
+    document.getElementById('seller-login-form').classList.add('hidden');
+    document.getElementById('seller-dashboard').classList.remove('hidden');
+
+    const adminSel = document.getElementById('admin-store-selector');
+    if (user.role === 'admin') {
+        // Admin: show store selector
+        if (adminSel) {
+            adminSel.classList.remove('hidden');
+            const sel = document.getElementById('store-select');
+            sel.innerHTML = AppData.sellers.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            // Pick first store by default
+            AppData.currentSellerDashboard = AppData.sellers[0];
+            sel.addEventListener('change', () => {
+                AppData.currentSellerDashboard = getSellerById(sel.value);
+                renderSellerDashboard();
+            });
+        }
+    } else {
+        // Seller: only their own store
+        if (adminSel) adminSel.classList.add('hidden');
+        AppData.currentSellerDashboard = getSellerById(user.sellerId);
+    }
+    renderSellerDashboard();
+};
+
 const renderSellerDashboard = () => {
     const seller = AppData.currentSellerDashboard;
     if (!seller) return;
+    const user = AppData.currentUser;
+
+    // Update admin store selector
+    const adminSel = document.getElementById('admin-store-selector');
+    if (adminSel && user && user.role === 'admin') {
+        adminSel.classList.remove('hidden');
+        const sel = document.getElementById('store-select');
+        if (sel) sel.value = seller.id;
+    } else if (adminSel) {
+        adminSel.classList.add('hidden');
+    }
+
+    // Show role badge
+    const roleBadgeEl = document.getElementById('dashboard-role-badge');
+    if (roleBadgeEl && user) {
+        roleBadgeEl.textContent = user.role === 'admin' ? '👑 Admin' : '🏪 Penjual';
+        roleBadgeEl.className = `role-badge ${user.role}`;
+    }
     
     document.getElementById('dashboard-seller-name').textContent = seller.name;
     const statusBadge = document.getElementById('dashboard-seller-status');
@@ -871,6 +1055,13 @@ const toggleStoreStatus = () => {
 const addSellerProduct = () => {
     const seller = AppData.currentSellerDashboard;
     if (!seller) return;
+
+    const user = AppData.currentUser;
+    // Role check: seller can only add to own store
+    if (user && user.role === 'seller' && user.sellerId !== seller.id) {
+        showToast('Anda hanya bisa menambahkan produk ke toko sendiri!', 'error');
+        return;
+    }
     
     const name = document.getElementById('new-product-name').value.trim();
     const price = parseInt(document.getElementById('new-product-price').value);
@@ -1041,6 +1232,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('store-toggle').addEventListener('change', toggleStoreStatus);
     document.getElementById('add-product-btn').addEventListener('click', addSellerProduct);
     document.getElementById('save-settings-btn').addEventListener('click', saveSellerSettings);
+    document.getElementById('dashboard-logout-btn').addEventListener('click', () => {
+        logout();
+        toggleSellerModal(false);
+    });
     
     // Dashboard tabs
     document.querySelectorAll('.dash-tab').forEach(tab => {

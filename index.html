@@ -127,7 +127,8 @@
                     </button>
                     <div class="login-divider"><span>Demo akun</span></div>
                     <div class="demo-credentials">
-                        <code>Username: <strong>admin</strong> | Password: <strong>admin123</strong></code>
+                        <code>Admin: <strong>admin</strong> / <strong>admin123</strong></code>
+                        <code>Penjual: <strong>seller1</strong> / <strong>seller123</strong></code>
                     </div>
                 </div>
 
@@ -392,25 +393,39 @@
                 <button id="seller-login-btn" class="btn-primary btn-full">
                     <i class="fas fa-right-to-bracket"></i> Masuk Dashboard
                 </button>
-                <p class="form-hint">Demo: username "admin", password "admin123"</p>
+                <p class="form-hint">Admin: "admin" / "admin123" | Penjual: "seller1" / "seller123"</p>
             </div>
             <div id="seller-dashboard" class="hidden">
+                <!-- Admin store selector -->
+                <div id="admin-store-selector" class="admin-store-selector hidden">
+                    <label><i class="fas fa-store"></i> Kelola Toko:</label>
+                    <select id="store-select">
+                    </select>
+                </div>
                 <div class="seller-info">
                     <div class="seller-profile">
                         <div class="seller-avatar">
                             <i class="fas fa-store"></i>
                         </div>
                         <div class="seller-details">
-                            <h4 id="dashboard-seller-name">Warung Nusantara</h4>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <h4 id="dashboard-seller-name">Warung Nusantara</h4>
+                                <span id="dashboard-role-badge" class="role-badge admin"></span>
+                            </div>
                             <span id="dashboard-seller-status" class="status-badge open">BUKA</span>
                         </div>
                     </div>
-                    <div class="seller-toggle">
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="store-toggle" checked>
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span id="toggle-label">Toko Buka</span>
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
+                        <div class="seller-toggle">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="store-toggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span id="toggle-label">Toko Buka</span>
+                        </div>
+                        <button id="dashboard-logout-btn" class="dashboard-logout-btn">
+                            <i class="fas fa-right-from-bracket"></i> Logout
+                        </button>
                     </div>
                 </div>
                 <div class="dashboard-tabs">
@@ -509,31 +524,18 @@
             </div>
         </div>
         <div class="hero-visual">
-            <div class="hero-orbit-system">
-                <div class="orbit-track orbit-track-outer">
-                    <div class="orbit-dot dot-outer-1"></div>
-                    <div class="orbit-dot dot-outer-2"></div>
-                    <div class="orbit-dot dot-outer-3"></div>
+            <div class="hero-3d-area">
+                <div class="text3d-wrapper">
+                    <span class="text3d">Hmm</span>
+                    <span class="text3d text3d-sub">Laper Nichh</span>
                 </div>
-                <div class="orbit-track orbit-track-inner">
-                    <div class="orbit-dot dot-inner-1"></div>
-                    <div class="orbit-dot dot-inner-2"></div>
-                </div>
-                <div class="hero-center-card">
-                    <i class="fas fa-bowl-food"></i>
-                    <span>Food Hub</span>
-                </div>
-                <div class="hero-float-card card-top">
-                    <i class="fas fa-burger"></i><span>Burger</span>
-                </div>
-                <div class="hero-float-card card-right">
-                    <i class="fas fa-pizza-slice"></i><span>Pizza</span>
-                </div>
-                <div class="hero-float-card card-bottom">
-                    <i class="fas fa-mug-hot"></i><span>Kopi</span>
-                </div>
-                <div class="hero-float-card card-left">
-                    <i class="fas fa-ice-cream"></i><span>Dessert</span>
+                <div class="float-food-icons">
+                    <div class="ffi ffi-1"><i class="fas fa-burger"></i></div>
+                    <div class="ffi ffi-2"><i class="fas fa-pizza-slice"></i></div>
+                    <div class="ffi ffi-3"><i class="fas fa-mug-hot"></i></div>
+                    <div class="ffi ffi-4"><i class="fas fa-ice-cream"></i></div>
+                    <div class="ffi ffi-5"><i class="fas fa-bowl-food"></i></div>
+                    <div class="ffi ffi-6"><i class="fas fa-drumstick-bite"></i></div>
                 </div>
             </div>
         </div>
