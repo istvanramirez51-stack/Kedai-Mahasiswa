@@ -134,7 +134,6 @@ const initLoadingScreen = () => {
     const loadBar = document.getElementById('load-bar');
     const strips = document.querySelectorAll('.load-strip');
     
-    // Animate strips
     let progress = 0;
     const interval = setInterval(() => {
         progress += Math.random() * 15;
@@ -144,7 +143,6 @@ const initLoadingScreen = () => {
         if (progress === 100) {
             clearInterval(interval);
             setTimeout(() => {
-                // Animate strips out
                 strips.forEach((strip, i) => {
                     gsap.to(strip, {
                         scaleY: 0,
@@ -155,7 +153,6 @@ const initLoadingScreen = () => {
                     });
                 });
                 
-                // Fade out center content
                 gsap.to('.load-center', {
                     opacity: 0,
                     scale: 0.9,
@@ -276,25 +273,33 @@ const handleLogin = () => {
     }
 };
 
+// FIXED: Logout now correctly re-binds event to the actual DOM element
 const logout = () => {
     AppData.isLoggedIn = false;
     AppData.currentUser = null;
     AppData.currentSellerDashboard = null;
+    
+    // Get the actual element currently in DOM (may have been replaced by updateNavForLogin)
     const loginBtn = document.getElementById('login-nav-btn');
-    loginBtn.innerHTML = '<i class="fas fa-user-circle"></i> <span>Login</span>';
-    loginBtn.style.background = '';
-    loginBtn.onclick = null;
-    loginBtn.addEventListener('click', () => toggleLoginModal(true));
-    // Remove logout btn if exists
+    if (loginBtn) {
+        loginBtn.innerHTML = '<i class="fas fa-user-circle"></i> <span>Login</span>';
+        loginBtn.style.background = '';
+        // Clone to remove old listeners, then re-attach login listener
+        const newBtn = loginBtn.cloneNode(true);
+        loginBtn.parentNode.replaceChild(newBtn, loginBtn);
+        newBtn.addEventListener('click', () => toggleLoginModal(true));
+    }
+    
     const logoutBtn = document.getElementById('nav-logout-btn');
     if (logoutBtn) logoutBtn.remove();
+    
     showToast('Berhasil logout!');
 };
 
 const updateNavForLogin = () => {
     const loginBtn = document.getElementById('login-nav-btn');
     const user = AppData.currentUser;
-    if (!user) return;
+    if (!user || !loginBtn) return;
 
     const isAdmin = user.role === 'admin';
     const roleLabel = isAdmin ? 'Admin' : 'Penjual';
@@ -302,11 +307,13 @@ const updateNavForLogin = () => {
 
     loginBtn.innerHTML = `<i class="fas fa-store"></i> <span>${roleLabel}: ${user.name.split(' ')[0]}</span>`;
     loginBtn.style.background = roleColor;
-    // Remove old click handler and open dashboard directly
-    loginBtn.replaceWith(loginBtn.cloneNode(true));
-    const newBtn = document.getElementById('login-nav-btn');
+    
+    // Clone to wipe old listeners and attach new dashboard opener
+    const newBtn = loginBtn.cloneNode(true);
     newBtn.style.background = roleColor;
     newBtn.innerHTML = `<i class="fas fa-store"></i> <span>${roleLabel}: ${user.name.split(' ')[0]}</span>`;
+    loginBtn.parentNode.replaceChild(newBtn, loginBtn);
+    
     newBtn.addEventListener('click', () => toggleSellerModal(true));
 
     // Add logout button next to login btn
@@ -321,7 +328,6 @@ const updateNavForLogin = () => {
     }
 };
 
-// Toggle password visibility
 const togglePassword = () => {
     const input = document.getElementById('login-password');
     const icon = document.getElementById('pass-eye-icon');
@@ -346,7 +352,8 @@ const initCountdown = () => {
         const diff = endTime - now;
         
         if (diff <= 0) {
-            document.getElementById('countdown-text').textContent = 'Promo berakhir!';
+            const el = document.getElementById('countdown-text');
+            if (el) el.textContent = 'Promo berakhir!';
             return;
         }
         
@@ -354,8 +361,10 @@ const initCountdown = () => {
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
         
-        document.getElementById('countdown-text').textContent = 
-            `Berakhir dalam ${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+        const el = document.getElementById('countdown-text');
+        if (el) {
+            el.textContent = `Berakhir dalam ${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+        }
     };
     
     updateCountdown();
@@ -409,7 +418,6 @@ const addToCart = (productId) => {
     renderCart();
     showToast(`${product.name} ditambahkan ke keranjang!`);
     
-    // Animate cart button
     const cartBtn = document.getElementById('cart-btn');
     gsap.fromTo(cartBtn, 
         { scale: 1.2 }, 
@@ -452,7 +460,6 @@ const renderCart = () => {
         return;
     }
     
-    // Group by seller
     const grouped = {};
     AppData.cart.forEach(item => {
         if (!grouped[item.sellerId]) {
@@ -634,7 +641,6 @@ const openMenu = (sellerId) => {
         </div>
     `).join('');
     
-    // Transition
     const tokoSection = document.getElementById('toko');
     const menuSection = document.getElementById('menu-section');
     
@@ -686,7 +692,6 @@ const toggleCheckout = (show) => {
             return;
         }
         
-        // Generate resi otomatis
         const resi = generateResi();
         document.getElementById('generated-resi').textContent = resi;
         
@@ -745,12 +750,10 @@ const renderCheckoutSummary = () => {
     container.innerHTML = html;
 };
 
-// Payment category tabs
 const switchPaymentCategory = (cat) => {
     document.querySelectorAll('.pay-cat-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.cat === cat));
     document.querySelectorAll('.payment-options-grid').forEach(grid => grid.classList.toggle('active', grid.id === `pay-${cat}`));
     
-    // Update info box
     const infoBox = document.getElementById('payment-info-box');
     const infoTexts = {
         ewallet: '<strong>QRIS:</strong> Scan QR code untuk pembayaran instan.<br><strong>DANA / GoPay:</strong> Transfer ke nomor yang akan dikirim via WhatsApp.',
@@ -761,7 +764,6 @@ const switchPaymentCategory = (cat) => {
     infoBox.classList.add('visible');
 };
 
-// Pickup method toggle
 const handlePickupChange = () => {
     const method = document.querySelector('input[name="pickup-method"]:checked').value;
     const addressField = document.getElementById('address-field');
@@ -794,7 +796,6 @@ const confirmOrder = () => {
         return;
     }
     
-    // Group by seller
     const grouped = {};
     AppData.cart.forEach(item => {
         if (!grouped[item.sellerId]) grouped[item.sellerId] = [];
@@ -836,7 +837,6 @@ const confirmOrder = () => {
         });
     }
     
-    // Save transaction
     AppData.transactions.push({
         resi: resi,
         customer: customerName,
@@ -846,18 +846,15 @@ const confirmOrder = () => {
         stores: storeIds.length
     });
     
-    // Clear cart
     AppData.cart = [];
     updateCartCount();
     renderCart();
     toggleCheckout(false);
     toggleCart(false);
 
-    // Show WA order modal
     showWaOrderModal(waLinks);
 };
 
-// Show modal with per-store WA buttons
 const showWaOrderModal = (waLinks) => {
     let existing = document.getElementById('wa-order-modal');
     if (existing) existing.remove();
@@ -915,7 +912,6 @@ const toggleSellerModal = (show) => {
             { scale: 0.9, y: 30, opacity: 0 }, 
             { scale: 1, y: 0, opacity: 1, duration: 0.3, ease: 'back.out(1.7)' }
         );
-        // If already logged in, go straight to dashboard
         if (AppData.isLoggedIn && AppData.currentUser) {
             document.getElementById('seller-login-form').classList.add('hidden');
             document.getElementById('seller-dashboard').classList.remove('hidden');
@@ -960,12 +956,10 @@ const openSellerDashboard = () => {
 
     const adminSel = document.getElementById('admin-store-selector');
     if (user.role === 'admin') {
-        // Admin: show store selector
         if (adminSel) {
             adminSel.classList.remove('hidden');
             const sel = document.getElementById('store-select');
             sel.innerHTML = AppData.sellers.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-            // Pick first store by default
             AppData.currentSellerDashboard = AppData.sellers[0];
             sel.addEventListener('change', () => {
                 AppData.currentSellerDashboard = getSellerById(sel.value);
@@ -973,7 +967,6 @@ const openSellerDashboard = () => {
             });
         }
     } else {
-        // Seller: only their own store
         if (adminSel) adminSel.classList.add('hidden');
         AppData.currentSellerDashboard = getSellerById(user.sellerId);
     }
@@ -985,7 +978,6 @@ const renderSellerDashboard = () => {
     if (!seller) return;
     const user = AppData.currentUser;
 
-    // Update admin store selector
     const adminSel = document.getElementById('admin-store-selector');
     if (adminSel && user && user.role === 'admin') {
         adminSel.classList.remove('hidden');
@@ -995,7 +987,6 @@ const renderSellerDashboard = () => {
         adminSel.classList.add('hidden');
     }
 
-    // Show role badge
     const roleBadgeEl = document.getElementById('dashboard-role-badge');
     if (roleBadgeEl && user) {
         roleBadgeEl.textContent = user.role === 'admin' ? '👑 Admin' : '🏪 Penjual';
@@ -1048,7 +1039,7 @@ const toggleStoreStatus = () => {
     
     seller.status = document.getElementById('store-toggle').checked ? 'open' : 'closed';
     renderSellerDashboard();
-    renderToko(); // Update toko view
+    renderToko();
     showToast(`Toko sekarang ${seller.status === 'open' ? 'BUKA' : 'TUTUP'}`);
 };
 
@@ -1057,7 +1048,6 @@ const addSellerProduct = () => {
     if (!seller) return;
 
     const user = AppData.currentUser;
-    // Role check: seller can only add to own store
     if (user && user.role === 'seller' && user.sellerId !== seller.id) {
         showToast('Anda hanya bisa menambahkan produk ke toko sendiri!', 'error');
         return;
@@ -1170,10 +1160,23 @@ const updateActiveNav = () => {
 // EVENT LISTENERS
 // ========================================
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize
     initLoadingScreen();
     renderToko();
     initCountdown();
+    
+    // FIXED: Smooth scroll for all internal anchor links + close mobile menu
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            const targetId = this.getAttribute('href');
+            if (!targetId || targetId === '#') return;
+            const target = document.querySelector(targetId);
+            if (target) {
+                e.preventDefault();
+                target.scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('mobile-menu').classList.remove('active');
+            }
+        });
+    });
     
     // Login modal events
     document.getElementById('login-nav-btn').addEventListener('click', () => toggleLoginModal(true));
@@ -1219,12 +1222,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('back-to-toko').addEventListener('click', backToToko);
     
     // Seller dashboard
-    document.getElementById('footer-seller-login').addEventListener('click', (e) => {
-        e.preventDefault();
+    // FIXED: removed e.preventDefault() because elements are now <button>, not <a>
+    document.getElementById('footer-seller-login').addEventListener('click', () => {
         toggleSellerModal(true);
     });
-    document.getElementById('footer-seller-register').addEventListener('click', (e) => {
-        e.preventDefault();
+    document.getElementById('footer-seller-register').addEventListener('click', () => {
         toggleSellerModal(true);
     });
     document.getElementById('close-seller').addEventListener('click', () => toggleSellerModal(false));
@@ -1244,8 +1246,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Mobile menu
     document.getElementById('menu-toggle').addEventListener('click', toggleMobileMenu);
+    
+    // FIXED: Close mobile menu when clicking nav links, but don't break login button
     document.querySelectorAll('.mobile-link').forEach(link => {
-        link.addEventListener('click', () => {
+        link.addEventListener('click', (e) => {
+            // Don't close if clicking the login button (it has its own handler)
+            if (link.id === 'mobile-login-btn') return;
             document.getElementById('mobile-menu').classList.remove('active');
         });
     });

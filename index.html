@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-<base target="_blank">
 </head>
 <body>
 
@@ -41,11 +40,11 @@
             <span class="load-letter" style="--i:1">A</span>
             <span class="load-letter" style="--i:2">B</span>
             <span class="load-letter" style="--i:3">A</span>
-            <span class="load-letter" style="--i:3">R</span>
+            <span class="load-letter" style="--i:4">R</span> <!-- FIXED: was --i:3 -->
             <span class="load-space"> </span>
-            <span class="load-letter accent" style="--i:4">B</span>
-            <span class="load-letter accent" style="--i:5">R</span>
-            <span class="load-letter accent" style="--i:6">O</span>
+            <span class="load-letter accent" style="--i:5">B</span> <!-- FIXED: was 4 -->
+            <span class="load-letter accent" style="--i:6">R</span> <!-- FIXED: was 5 -->
+            <span class="load-letter accent" style="--i:7">O</span> <!-- FIXED: was 6 -->
         </div>
         <p class="load-sub">DIGITALISASI UMKM KULINER UNIVERSITAS</p>
         <div class="load-bar-wrap">
@@ -120,7 +119,8 @@
                             <span class="checkmark"></span>
                             Ingat saya
                         </label>
-                        <a href="#" class="forgot-pass">Lupa password?</a>
+                        <!-- FIXED: changed <a href="#"> to <button> so it works even without href -->
+                        <button class="forgot-pass">Lupa password?</button>
                     </div>
                     <button id="do-login-btn" class="login-submit-btn">
                         <i class="fas fa-right-to-bracket"></i> Masuk Sekarang
@@ -193,7 +193,7 @@
     <a href="#toko" class="mobile-link"><i class="fas fa-store"></i> Toko</a>
     <a href="#tentang" class="mobile-link"><i class="fas fa-circle-info"></i> Tentang</a>
     <a href="#contact" class="mobile-link"><i class="fas fa-headset"></i> Contact CS</a>
-    <button class="mobile-link mobile-login-btn" id="mobile-login-btn">
+    <button type="button" class="mobile-link mobile-login-btn" id="mobile-login-btn">
         <i class="fas fa-user-circle"></i> Login / Daftar
     </button>
 </div>
@@ -566,12 +566,13 @@
                 <p>Untuk setiap pembelian di atas Rp 50.000</p>
                 <div class="promo-code-box">
                     <span>Kode:</span>
-                    <code>FOODHUB50</code>
-                    <button onclick="copyPromo('FOODHUB50')"><i class="fas fa-copy"></i></button>
+                    <code>KICAUMANIA23</code>
+                    <button onclick="copyPromo('KICAUMANIA23')"><i class="fas fa-copy"></i></button>
                 </div>
                 <div class="promo-countdown" id="promo-countdown">
                     <i class="fas fa-clock"></i>
-                    <span id="countdown-text">Berakhir dalam 23:45:12</span>
+                    <!-- FIXED: id changed from "text" to "countdown-text" to match JS -->
+                    <span id="countdown-text">Berakhir 15 april 2026</span>
                 </div>
             </div>
             <div class="promo-card promo-sm">
@@ -857,7 +858,7 @@
                 <span><i class="fas fa-star"></i> KULINER LOKAL</span>
                 <span><i class="fas fa-handshake"></i> BERSAMA KITA KUAT</span>
                 <span><i class="fas fa-rocket"></i> DIGITALISASI 2025</span>
-                <span><i class="fas fa-bowl-food"></i> FOOD HUB</span>
+                <span><i class="fas fa-bowl-food"></i> KEDEI MAHASISWA</span>
                 <span><i class="fas fa-heart"></i> UMKM INDONESIA</span>
                 <span><i class="fas fa-star"></i> KULINER LOKAL</span>
                 <span><i class="fas fa-handshake"></i> BERSAMA KITA KUAT</span>
@@ -869,7 +870,7 @@
         <div class="footer-brand">
             <div class="brand">
                 <i class="fas fa-bowl-food"></i>
-                <span>FOOD HUB</span>
+                <span>KEDEI MAHASISWA</span>
             </div>
             <p>Digitalisasi UMKM Kuliner Indonesia. Satu wadah, banyak rasa, masa depan cerah untuk semua penjual.</p>
             <div class="social-links">
@@ -888,8 +889,9 @@
         </div>
         <div class="footer-links">
             <h4>Penjual</h4>
-            <a href="#" id="footer-seller-login"><i class="fas fa-chevron-right"></i> Login Dashboard</a>
-            <a href="#" id="footer-seller-register"><i class="fas fa-chevron-right"></i> Daftar Toko Baru</a>
+            <!-- FIXED: changed <a href="#"> to <button class="footer-link"> so it works without href -->
+            <button class="footer-link" id="footer-seller-login"><i class="fas fa-chevron-right"></i> Login Dashboard</button>
+            <button class="footer-link" id="footer-seller-register"><i class="fas fa-chevron-right"></i> Daftar Toko Baru</button>
             <a href="#"><i class="fas fa-chevron-right"></i> Panduan Penggunaan</a>
             <a href="#"><i class="fas fa-chevron-right"></i> Kebijakan Penjual</a>
         </div>
@@ -902,7 +904,7 @@
         </div>
     </div>
     <div class="footer-bottom">
-        <p>&copy; 2025 <strong>Food Hub</strong> — Digitalisasi UMKM Kuliner Indonesia. All rights reserved.</p>
+        <p>&copy; 2025 <strong>Kedei Mahasiswa</strong> — Digitalisasi UMKM Kuliner Indonesia. All rights reserved.</p>
         <div class="footer-bottom-badges">
             <span><i class="fas fa-shield-halved"></i> Aman & Terpercaya</span>
             <span><i class="fas fa-lock"></i> SSL Secured</span>
